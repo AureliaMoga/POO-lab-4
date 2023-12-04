@@ -1,0 +1,220 @@
+//a)
+#include <iostream>
+#include <string>
+
+// Clasa de bază abstractă
+class Senzor {
+public:
+    Senzor(const std::string& unitateMasura) : unitateMasura_(unitateMasura) {}
+
+    // Funcție virtuală pură pentru a citi datele despre starea mediului înconjurător
+    virtual void citesteDate() const = 0;
+
+    // Funcție pentru a afișa datele în fluxul de ieșire
+    virtual void afiseazaDate(std::ostream& out) const {
+        out << "Unitate de masura: " << unitateMasura_ << std::endl;
+    }
+
+    // Funcție pentru a citi datele din fluxul de intrare
+    virtual void citesteDate(std::istream& in) {
+        // Implementarea specifică clasei de bază sau lăsarea goală pentru clasele derivate
+    }
+
+    // Constructor de copiere
+    Senzor(const Senzor& other) : unitateMasura_(other.unitateMasura_) {}
+
+    // Operator de atribuire
+    Senzor& operator=(const Senzor& other) {
+        if (this != &other) {
+            unitateMasura_ = other.unitateMasura_;
+        }
+        return *this;
+    }
+
+    // Destructor virtual pentru a permite funcționalitatea polimorfică
+    virtual ~Senzor() {}
+
+private:
+    std::string unitateMasura_;
+};
+
+// Clasa pentru senzorul de temperatură
+class SenzorTemperatura : public Senzor {
+public:
+    SenzorTemperatura(const std::string& unitateMasura) : Senzor(unitateMasura) {}
+
+    void citesteDate() const override {
+        std::cout << "Citire temperatura..." << std::endl;
+    }
+};
+
+// Clasa pentru senzorul de umiditate
+class SenzorUmiditate : public Senzor {
+public:
+    SenzorUmiditate(const std::string& unitateMasura) : Senzor(unitateMasura) {}
+
+    void citesteDate() const override {
+        std::cout << "Citire umiditate..." << std::endl;
+    }
+};
+
+// Clasa pentru senzorul de viteză a vântului
+class SenzorVitezaVantului : public Senzor {
+public:
+    SenzorVitezaVantului(const std::string& unitateMasura) : Senzor(unitateMasura) {}
+
+    void citesteDate() const override {
+        std::cout << "Citire viteza vantului..." << std::endl;
+    }
+};
+
+int main() {
+    SenzorTemperatura senzorTemp("Grade Celsius");
+    SenzorUmiditate senzorUmiditate("Procent");
+    SenzorVitezaVantului senzorViteza("m/s");
+
+    senzorTemp.citesteDate();
+    senzorUmiditate.citesteDate();
+    senzorViteza.citesteDate();
+
+    senzorTemp.afiseazaDate(std::cout);
+    senzorUmiditate.afiseazaDate(std::cout);
+    senzorViteza.afiseazaDate(std::cout);
+
+    return 0;
+}
+
+//b)
+
+#include <iostream>
+#include <iomanip>
+#include <cstdlib>
+#include <ctime>
+
+class GeneratorValori {
+public:
+    static double genereazaTemperatura();
+    static double genereazaUmiditate();
+    static double genereazaVitezaVantului();
+};
+
+class Senzor {
+protected:
+    std::string unitateMasura;
+
+public:
+    Senzor(const std::string& unitate) : unitateMasura(unitate) {}
+
+    virtual void citesteDate() = 0;
+
+    friend std::ostream& operator<<(std::ostream& os, const Senzor& senzor) {
+        os << std::fixed << std::setprecision(2) << senzor.obtineValoare() << " " << senzor.unitateMasura;
+        return os;
+    }
+
+    Senzor(const Senzor& other) : unitateMasura(other.unitateMasura) {}
+
+    Senzor& operator=(const Senzor& other) {
+        if (this != &other) {
+            unitateMasura = other.unitateMasura;
+        }
+        return *this;
+    }
+
+    virtual ~Senzor() {}
+
+    virtual double obtineValoare() const = 0;
+};
+
+class SenzorTemperatura : public Senzor {
+private:
+    double temperatura;
+
+public:
+    SenzorTemperatura(const std::string& unitate) : Senzor(unitate), temperatura(0.0) {}
+
+    void citesteDate() override {
+        temperatura = GeneratorValori::genereazaTemperatura();
+    }
+
+    double obtineValoare() const override {
+        return temperatura;
+    }
+};
+
+class SenzorUmiditate : public Senzor {
+private:
+    double umiditate;
+
+public:
+    SenzorUmiditate(const std::string& unitate) : Senzor(unitate), umiditate(0.0) {}
+
+    void citesteDate() override {
+        umiditate = GeneratorValori::genereazaUmiditate();
+    }
+
+    double obtineValoare() const override {
+        return umiditate;
+    }
+};
+
+class SenzorVitezaVant : public Senzor {
+private:
+    double vitezaVant;
+
+public:
+    SenzorVitezaVant(const std::string& unitate) : Senzor(unitate), vitezaVant(0.0) {}
+
+    void citesteDate() override {
+        vitezaVant = GeneratorValori::genereazaVitezaVantului();
+    }
+
+    double obtineValoare() const override {
+        return vitezaVant;
+    }
+};
+
+double GeneratorValori::genereazaTemperatura() {
+    return rand() % 50 - 10; // Generare între -10 și 40 grade Celsius
+}
+
+double GeneratorValori::genereazaUmiditate() {
+    return rand() % 100; // Generare între 0% și 100%
+}
+
+double GeneratorValori::genereazaVitezaVantului() {
+    return rand() % 30; // Generare între 0 m/s și 30 m/s
+}
+
+class DispozitivColectare {
+private:
+    SenzorTemperatura senzorTemperatura{"Celsius"};
+    SenzorUmiditate senzorUmiditate{"%"};
+    SenzorVitezaVant senzorVitezaVant{"m/s"};
+
+public:
+    void citesteDate() {
+        senzorTemperatura.citesteDate();
+        senzorUmiditate.citesteDate();
+        senzorVitezaVant.citesteDate();
+    }
+
+    void afiseazaStarea() const {
+        std::cout << "Starea mediului inconjurator:\n";
+        std::cout << "Temperatura: " << senzorTemperatura << '\n';
+        std::cout << "Umiditate: " << senzorUmiditate << '\n';
+        std::cout << "Viteza vantului: " << senzorVitezaVant << '\n';
+    }
+};
+
+int main() {
+    srand(time(nullptr));
+
+    DispozitivColectare dispozitiv;
+    dispozitiv.citesteDate();
+    dispozitiv.afiseazaStarea();
+
+    return 0;
+}
+
+
